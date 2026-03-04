@@ -176,7 +176,24 @@ def nearby_routes():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    print("🚀 GPS Route Finder starting on http://localhost:5000")
-    print("📍 Open your browser to see the interactive map")
-    print("🔒 Uses OSRM (free, open-source routing)")
-    app.run(debug=True, port=5000)
+    import os
+    
+    # Production vs Development settings
+    is_production = os.environ.get('RENDER') is not None or os.environ.get('HEROKU') is not None
+    debug_mode = not is_production
+    port = int(os.environ.get('PORT', 5000))
+    
+    print("GPS Route Finder starting...")
+    print(f"Environment: {'Production' if is_production else 'Development'}")
+    print(f"Port: {port}")
+    print("Uses OSRM (free, open-source routing)")
+    
+    if debug_mode:
+        print("Debug mode: ON")
+    
+    app.run(
+        host='0.0.0.0',  # Listen on all interfaces
+        port=port,
+        debug=debug_mode,
+        use_reloader=debug_mode
+    )

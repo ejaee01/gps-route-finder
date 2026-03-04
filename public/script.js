@@ -9,6 +9,8 @@ let userMarker;
 let routeLayer;
 let currentLocation = null;
 let watchID = null;
+let routeUpdateInterval = null;
+let currentRoute = null;  // Store current route for live updates
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initializeApp);
@@ -297,11 +299,17 @@ async function getAndDisplayRoute(lat1, lon1, lat2, lon2) {
         
         const trafficData = await trafficResponse.json();
         
+        // Store route for live updates
+        currentRoute = routeData;
+        
         // Display route on map
         displayRoute(routeData, trafficData);
         
         // Show route info
         showRouteInfo(routeData, trafficData);
+        
+        // Start live traffic updates every 10 seconds
+        startLiveUpdates();
         
     } catch (error) {
         console.error('Error getting route:', error);
@@ -387,9 +395,79 @@ function clearRoute() {
         routeLayer = null;
     }
     
+    // Stop live updates
+    if (routeUpdateInterval) {
+        clearInterval(routeUpdateInterval);
+        routeUpdateInterval = null;
+    }
+    
+    currentRoute = null;
     document.getElementById('route-info').classList.add('hidden');
     document.getElementById('alternative-routes').classList.add('hidden');
     document.getElementById('destination').value = '';
+}
+
+/**
+ * Update traffic and ETA every 10 seconds
+ */
+function startLiveUpdates() {
+    // Clear any existing interval
+    if (routeUpdateInterval) {
+        clearInterval(routeUpdateInterval);
+    }
+    
+    // Update every 10 seconds
+    routeUpdateInterval = setInterval(async () => {
+        if (!currentRoute) return;
+        
+        try {
+            const trafficResponse = await fetch('/api/traffic-estimate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    duration: currentRoute.duration,
+                    distance: currentRoute.distance,
+                    departure_time: Math.floor(Date.now() / 1000)
+                })
+            });
+            
+            const trafficData = await trafficResponse.json();
+            
+            // Update the display without recalculating route
+            updateTrafficDisplay(trafficData);
+            
+        } catch (error) {
+            console.warn('Live update error:', error);
+        }
+    }, 10000);  // 10 seconds
+}
+
+/**
+ * Update traffic display (without recalculating route)
+ */
+function updateTrafficDisplay(trafficData) {
+    const trafficStatus = document.getElementById('traffic-status');
+    const duration = document.getElementById('duration');
+    
+    if (!trafficStatus) return;
+    
+    // Calculate arrival time
+    const now = new Date();
+    const arrivalMs = now.getTime() + (trafficData.duration_seconds * 1000);
+    const arrivalTime = new Date(arrivalMs);
+    const arrivalFormatted = arrivalTime.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+    });
+    
+    // Update traffic status with new arrival time
+    const trafficClass = trafficData.traffic_level.toLowerCase().replace(' ', '-');
+    trafficStatus.className = trafficClass;
+    trafficStatus.innerHTML = `${trafficData.icon} Traffic: <strong>${trafficData.traffic_level}</strong><br>Speed: ${trafficData.speed_kmh} km/h<br>Arrive by: <strong>${arrivalFormatted}</strong>`;
+    
+    // Update duration
+    duration.textContent = trafficData.duration_formatted;
 }
 
 /**
@@ -402,6 +480,10 @@ function stopGPSTracking() {
 }
 
 // Clean up on page unload
-window.addEventListener('unload', stopGPSTracking);
+window.addEventListener('unload', () => {
+    stopGPSTracking();
+    if (routeUpdateInterval) clearInterval(routeUpdateInterval);
+});
 
-console.log('🚀 GPS Route Finder loaded and ready!');
+console.log('GPS Route Finder loaded and ready!');
+console.log('Live traffic updates: Every 10 seconds');
