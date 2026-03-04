@@ -19,16 +19,29 @@ document.addEventListener('DOMContentLoaded', initializeApp);
  * Initialize the application
  */
 function initializeApp() {
-    // Initialize map
-    initializeMap();
+    console.log('Initializing app...');
     
-    // Start GPS tracking
-    startGPSTracking();
+    // Initialize map FIRST (don't wait for GPS)
+    initializeMap();
+    console.log('Map initialized');
     
     // Set up event listeners
     setupEventListeners();
+    console.log('Event listeners set up');
     
-    console.log('✅ App initialized successfully');
+    // Start GPS tracking in background (non-blocking)
+    startGPSTracking();
+    
+    // Timeout: If no GPS after 5 seconds, allow manual entry
+    setTimeout(() => {
+        if (!currentLocation) {
+            console.warn('GPS not available after 5 seconds');
+            updateGPSStatus('error', 'GPS not available - Enter coordinates manually');
+            enableManualLocation();
+        }
+    }, 5000);
+    
+    console.log('App initialized successfully');
 }
 
 /**
@@ -54,33 +67,41 @@ function initializeMap() {
  */
 function startGPSTracking() {
     if (!navigator.geolocation) {
-        updateGPSStatus('error', 'Geolocation not supported - browser does not have location API');
-        console.warn('Geolocation not available. Using manual location entry instead.');
+        console.warn('Geolocation not available');
+        enableManualLocation();
         return;
     }
+    
+    console.log('Requesting GPS location...');
+    updateGPSStatus('error', 'Requesting GPS permission...');
     
     // Get initial location with timeout handling
     const gpsOptions = {
         enableHighAccuracy: false,  // Faster on many devices
-        timeout: 10000,              // 10 second timeout
+        timeout: 8000,              // 8 second timeout
         maximumAge: 0
     };
     
     navigator.geolocation.getCurrentPosition(
         (position) => {
+            console.log('GPS location obtained:', position.coords.latitude, position.coords.longitude);
             handleLocation(position);
             updateGPSStatus('active', 'GPS Connected - Getting live updates');
             
             // Watch location changes
             watchID = navigator.geolocation.watchPosition(
                 handleLocation,
-                handleLocationError,
+                (error) => {
+                    console.warn('Watch position error:', error);
+                    handleLocationError(error);
+                },
                 gpsOptions
             );
         },
         (error) => {
+            console.warn('GPS error on getCurrentPosition:', error.code, error.message);
             handleLocationError(error);
-            console.warn('Could not get initial location. Enter coordinates manually.');
+            enableManualLocation();
         },
         gpsOptions
     );
@@ -192,16 +213,38 @@ function setupEventListeners() {
 /**
  * Handle get route request
  */
-async function handleGetRoute() {
+function handleGetRoute() {
     const destination = document.getElementById('destination').value.trim();
+    const startInput = document.getElementById('start-location').value.trim();
     
     if (!destination) {
         alert('Please enter a destination');
         return;
     }
     
-    if (!currentLocation) {
-        alert('Waiting for GPS location...');
+    // Use current location or parse manual entry
+    let lat1, lon1;
+    
+    if (currentLocation) {
+        lat1 = currentLocation.lat;
+        lon1 = currentLocation.lon;
+    } else if (startInput) {
+        // Parse manual location entry
+        if (startInput.includes(',')) {
+            const coords = startInput.split(',').map(c => parseFloat(c.trim()));
+            if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                lat1 = coords[0];
+                lon1 = coords[1];
+            } else {
+                alert('Invalid start location format. Use: latitude,longitude');
+                return;
+            }
+        } else {
+            alert('Start location not available. Allow GPS or enter coordinates.');
+            return;
+        }
+    } else {
+        alert('Waiting for GPS location or enter start location manually');
         return;
     }
     
@@ -286,14 +329,14 @@ async function getAndDisplayRoute(lat1, lon1, lat2, lon2) {
             return;
         }
         
-// Get traffic estimate with current time for accurate arrival calculation
-    const trafficResponse = await fetch('/api/traffic-estimate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            duration: routeData.duration,
-            distance: routeData.distance,
-            departure_time: Math.floor(Date.now() / 1000)
+        // Get traffic estimate with current time for accurate arrival calculation
+        const trafficResponse = await fetch('/api/traffic-estimate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                duration: routeData.duration,
+                distance: routeData.distance,
+                departure_time: Math.floor(Date.now() / 1000)
             })
         });
         
@@ -471,11 +514,14 @@ function updateTrafficDisplay(trafficData) {
 }
 
 /**
- * Stop GPS tracking (for cleanup)
+ * Allow manual location entry when GPS fails
  */
-function stopGPSTracking() {
-    if (watchID) {
-        navigator.geolocation.clearWatch(watchID);
+function enableManualLocation() {
+    const startLocation = document.getElementById('start-location');
+    if (startLocation) {
+        startLocation.readOnly = false;
+        startLocation.placeholder = 'Enter your location (lat,lon) or address';
+        startLocation.value = '';
     }
 }
 
