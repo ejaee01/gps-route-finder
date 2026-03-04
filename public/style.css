@@ -1,0 +1,443 @@
+/* ===================================
+   GPS Route Finder - Main Styles
+   =================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f5f5;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Container layout */
+.container {
+    display: flex;
+    height: 100vh;
+    gap: 0;
+}
+
+/* Map styles */
+#map {
+    flex: 1;
+    background: #e0e0e0;
+    position: relative;
+    z-index: 1;
+}
+
+#map .leaflet-control-attribution {
+    display: none;
+}
+
+/* Control panel */
+.control-panel {
+    width: 380px;
+    background: white;
+    box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
+    overflow-y: auto;
+    padding: 20px;
+    z-index: 100;
+}
+
+/* Scrollbar styling */
+.control-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.control-panel::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.control-panel::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.control-panel::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Heading */
+.control-panel h1 {
+    font-size: 24px;
+    color: #1a73e8;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-panel h3 {
+    font-size: 16px;
+    color: #333;
+    margin-top: 20px;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #1a73e8;
+    padding-bottom: 8px;
+}
+
+/* Location info */
+.location-info {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #4CAF50;
+}
+
+.info-item {
+    margin-bottom: 10px;
+}
+
+.info-item strong {
+    display: block;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.info-item p {
+    color: #666;
+    font-size: 13px;
+    word-break: break-all;
+}
+
+/* GPS Status */
+.gps-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px 0;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #FFC107;
+    animation: pulse 1.5s infinite;
+}
+
+.gps-status.active .status-dot {
+    background: #4CAF50;
+}
+
+.gps-status.error .status-dot {
+    background: #f44336;
+    animation: none;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
+}
+
+#status-text {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Input section */
+.input-section {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+}
+
+/* Button styles */
+.button-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.btn {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-primary {
+    background: #1a73e8;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1557b0;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-secondary {
+    background: #e8e8e8;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #d0d0d0;
+}
+
+/* Route info card */
+.route-info {
+    background: #f0f7ff;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #1a73e8;
+    margin-bottom: 20px;
+}
+
+.route-info.hidden {
+    display: none;
+}
+
+/* Traffic indicator */
+.traffic-indicator {
+    margin-bottom: 15px;
+}
+
+#traffic-status {
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-align: center;
+    color: white;
+}
+
+#traffic-status.light {
+    background: #4CAF50;
+}
+
+#traffic-status.moderate {
+    background: #FFC107;
+    color: #333;
+}
+
+#traffic-status.heavy {
+    background: #FF9800;
+}
+
+#traffic-status.very-heavy {
+    background: #f44336;
+}
+
+/* Stats grid */
+.stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+}
+
+.stat {
+    background: white;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.stat strong {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.stat p {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a73e8;
+}
+
+/* Alternative routes */
+.alternative-routes {
+    background: #fff8e1;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #FFB300;
+    margin-bottom: 20px;
+}
+
+.alternative-routes.hidden {
+    display: none;
+}
+
+#routes-list {
+    margin-top: 12px;
+}
+
+.route-option {
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid #FFB300;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 13px;
+}
+
+.route-option:hover {
+    background: #fffacd;
+    transform: translateX(2px);
+}
+
+.route-option strong {
+    color: #333;
+}
+
+.route-option p {
+    color: #666;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Instructions */
+.instructions {
+    background: #e8f5e9;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #4CAF50;
+    margin-top: 20px;
+}
+
+.instructions h3 {
+    margin-top: 0;
+    border-bottom: 2px solid #4CAF50;
+}
+
+.instructions ul {
+    list-style: none;
+    margin-top: 12px;
+}
+
+.instructions li {
+    padding: 6px 0;
+    color: #333;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .control-panel {
+        width: 100%;
+        max-height: 40vh;
+    }
+
+    #map {
+        height: 60vh;
+    }
+
+    .stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .button-group {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Loading spinner */
+.loading {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #1a73e8;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Marker styles in Leaflet */
+.leaflet-popup-content {
+    font-size: 13px;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Route line styles */
+.route-line {
+    opacity: 0.8;
+    weight: 5;
+}
+
+.route-line.light {
+    color: #4CAF50; /* Green - Light traffic */
+}
+
+.route-line.moderate {
+    color: #FFC107; /* Yellow - Moderate traffic */
+}
+
+.route-line.heavy {
+    color: #FF9800; /* Orange - Heavy traffic */
+}
+
+.route-line.very-heavy {
+    color: #f44336; /* Red - Very heavy traffic */
+}

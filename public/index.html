@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Route Finder - Real-time Traffic & Location Tracking</title>
+    
+    <!-- Leaflet CSS for mapping -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    
+    <!-- Our custom styling -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Map container -->
+        <div id="map"></div>
+        
+        <!-- Control panel -->
+        <div class="control-panel">
+            <h1>🗺️ GPS Route Finder</h1>
+            
+            <!-- Current location display -->
+            <div class="location-info">
+                <div class="info-item">
+                    <strong>📍 Your Location:</strong>
+                    <p id="current-location">Getting GPS location...</p>
+                    <div id="gps-status" class="gps-status">
+                        <span class="status-dot"></span>
+                        <span id="status-text">Connecting to GPS...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Route input -->
+            <div class="input-section">
+                <h3>Plan Your Route</h3>
+                <div class="input-group">
+                    <label>Start Location (Auto-detected)</label>
+                    <input type="text" id="start-location" placeholder="Current location" readonly>
+                </div>
+                
+                <div class="input-group">
+                    <label>Destination</label>
+                    <input type="text" id="destination" placeholder="Enter destination address or coordinates (lat,lon)">
+                </div>
+                
+                <div class="button-group">
+                    <button id="get-route-btn" class="btn btn-primary">📍 Get Route</button>
+                    <button id="clear-route-btn" class="btn btn-secondary">Clear</button>
+                </div>
+            </div>
+            
+            <!-- Route information -->
+            <div id="route-info" class="route-info hidden">
+                <h3>Route Details</h3>
+                <div class="traffic-indicator">
+                    <div id="traffic-status"></div>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat">
+                        <strong>Distance</strong>
+                        <p id="distance">0 km</p>
+                    </div>
+                    <div class="stat">
+                        <strong>Time</strong>
+                        <p id="duration">0 min</p>
+                    </div>
+                    <div class="stat">
+                        <strong>Avg Speed</strong>
+                        <p id="speed">0 km/h</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alternative routes -->
+            <div id="alternative-routes" class="alternative-routes hidden">
+                <h3>Alternative Routes</h3>
+                <div id="routes-list"></div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="instructions">
+                <h3>ℹ️ How to Use</h3>
+                <ul>
+                    <li>✅ GPS location is automatically detected</li>
+                    <li>📝 Enter a destination (address or coordinates)</li>
+                    <li>🚀 Click "Get Route" to find the fastest path</li>
+                    <li>🟢 Line color shows traffic conditions</li>
+                    <li>📡 Real-time location updates shown on map</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.umd.js"></script>
+    
+    <!-- Our custom JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
