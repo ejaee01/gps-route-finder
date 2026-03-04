@@ -69,13 +69,14 @@ def get_route():
 @app.route('/api/traffic-estimate', methods=['POST'])
 def traffic_estimate():
     """
-    Estimate travel time based on OSRM
-    OSRM provides time-based routing (considers typical speeds)
+    Estimate travel time based on OSRM with detailed ETA breakdown
+    Returns: traffic level, speed, arrival time, and time breakdown
     """
     try:
         data = request.json
         duration = data.get('duration', 0)  # in seconds
         distance = data.get('distance', 0)  # in meters
+        departure_time = data.get('departure_time')  # optional: unix timestamp
         
         if distance == 0:
             return jsonify({'error': 'Invalid distance'}), 400
@@ -88,22 +89,41 @@ def traffic_estimate():
         if speed_kmh > 80:
             traffic_level = "Light"
             color = "green"
+            icon = "🟢"
         elif speed_kmh > 50:
             traffic_level = "Moderate"
             color = "yellow"
+            icon = "🟡"
         elif speed_kmh > 20:
             traffic_level = "Heavy"
             color = "orange"
+            icon = "🟠"
         else:
             traffic_level = "Very Heavy"
             color = "red"
+            icon = "🔴"
+        
+        # Calculate arrival time
+        import time as time_module
+        now = departure_time if departure_time else time_module.time()
+        arrival_time = now + duration
+        
+        # Format time breakdown (HH:MM:SS)
+        hours = int(duration // 3600)
+        minutes = int((duration % 3600) // 60)
+        seconds = int(duration % 60)
         
         return jsonify({
             'traffic_level': traffic_level,
             'color': color,
+            'icon': icon,
             'speed_kmh': round(speed_kmh, 1),
+            'duration_seconds': int(duration),
             'duration_minutes': round(duration / 60, 1),
-            'distance_km': round(distance / 1000, 2)
+            'duration_formatted': f"{hours}h {minutes}m {seconds}s" if hours > 0 else f"{minutes}m {seconds}s",
+            'distance_km': round(distance / 1000, 2),
+            'arrival_time': int(arrival_time),
+            'speed_category': 'Very Heavy' if speed_kmh < 20 else 'Heavy' if speed_kmh < 50 else 'Moderate' if speed_kmh < 80 else 'Light'
         })
         
     except Exception as e:

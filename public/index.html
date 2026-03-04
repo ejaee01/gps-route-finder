@@ -19,13 +19,13 @@
         
         <!-- Control panel -->
         <div class="control-panel">
-            <h1>🗺️ GPS Route Finder</h1>
+            <h1>GPS Route Finder</h1>
             
             <!-- Current location display -->
             <div class="location-info">
                 <div class="info-item">
-                    <strong>📍 Your Location:</strong>
-                    <p id="current-location">Getting GPS location...</p>
+                    <strong>Your Location:</strong>
+                    <p id="current-location">Detecting GPS location...</p>
                     <div id="gps-status" class="gps-status">
                         <span class="status-dot"></span>
                         <span id="status-text">Connecting to GPS...</span>
@@ -47,14 +47,14 @@
                 </div>
                 
                 <div class="button-group">
-                    <button id="get-route-btn" class="btn btn-primary">📍 Get Route</button>
-                    <button id="clear-route-btn" class="btn btn-secondary">Clear</button>
+                    <button id="get-route-btn" class="btn btn-primary">Calculate Route</button>
+                    <button id="clear-route-btn" class="btn btn-secondary">Clear Route</button>
                 </div>
             </div>
             
             <!-- Route information -->
             <div id="route-info" class="route-info hidden">
-                <h3>Route Details</h3>
+                <h3>Route Information</h3>
                 <div class="traffic-indicator">
                     <div id="traffic-status"></div>
                 </div>
@@ -64,11 +64,11 @@
                         <p id="distance">0 km</p>
                     </div>
                     <div class="stat">
-                        <strong>Time</strong>
+                        <strong>Travel Time</strong>
                         <p id="duration">0 min</p>
                     </div>
                     <div class="stat">
-                        <strong>Avg Speed</strong>
+                        <strong>Average Speed</strong>
                         <p id="speed">0 km/h</p>
                     </div>
                 </div>
@@ -82,13 +82,14 @@
             
             <!-- Instructions -->
             <div class="instructions">
-                <h3>ℹ️ How to Use</h3>
+                <h3>How to Use</h3>
                 <ul>
-                    <li>✅ GPS location is automatically detected</li>
-                    <li>📝 Enter a destination (address or coordinates)</li>
-                    <li>🚀 Click "Get Route" to find the fastest path</li>
-                    <li>🟢 Line color shows traffic conditions</li>
-                    <li>📡 Real-time location updates shown on map</li>
+                    <li>Allow GPS access when prompted by your browser</li>
+                    <li>Your current location will be automatically detected</li>
+                    <li>Enter a destination (address or coordinates: latitude,longitude)</li>
+                    <li>Click "Get Route" to calculate the fastest path</li>
+                    <li>Route line color indicates traffic: Green (light), Yellow (moderate), Orange (heavy), Red (very heavy)</li>
+                    <li>Your location updates in real-time on the map</li>
                 </ul>
             </div>
         </div>

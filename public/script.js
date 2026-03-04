@@ -36,11 +36,12 @@ function initializeMap() {
     // Create map centered on user location (default to a global center)
     map = L.map('map').setView([20, 0], 3);
     
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+    // Add English-only CartoDB map tiles (better language support)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/positron/{z}/{x}/{y}{r}.png', {
+        attribution: '© CartoDB, © OpenStreetMap contributors',
         maxZoom: 19,
-        minZoom: 2
+        minZoom: 2,
+        language: 'en'
     }).addTo(map);
     
     console.log('🗺️ Map initialized');
@@ -51,27 +52,35 @@ function initializeMap() {
  */
 function startGPSTracking() {
     if (!navigator.geolocation) {
-        updateGPSStatus('error', 'Geolocation not supported');
+        updateGPSStatus('error', 'Geolocation not supported - browser does not have location API');
+        console.warn('Geolocation not available. Using manual location entry instead.');
         return;
     }
     
-    // Get initial location
+    // Get initial location with timeout handling
+    const gpsOptions = {
+        enableHighAccuracy: false,  // Faster on many devices
+        timeout: 10000,              // 10 second timeout
+        maximumAge: 0
+    };
+    
     navigator.geolocation.getCurrentPosition(
         (position) => {
             handleLocation(position);
+            updateGPSStatus('active', 'GPS Connected - Getting live updates');
             
             // Watch location changes
             watchID = navigator.geolocation.watchPosition(
                 handleLocation,
                 handleLocationError,
-                {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
-                }
+                gpsOptions
             );
         },
-        handleLocationError
+        (error) => {
+            handleLocationError(error);
+            console.warn('Could not get initial location. Enter coordinates manually.');
+        },
+        gpsOptions
     );
 }
 
@@ -124,23 +133,27 @@ function handleLocation(position) {
  */
 function handleLocationError(error) {
     let message = 'Location error';
+    let details = '';
     
     switch (error.code) {
         case error.PERMISSION_DENIED:
-            message = 'GPS permission denied';
+            message = 'GPS Permission Denied';
+            details = 'Please enable location access in browser settings';
             updateGPSStatus('error', message);
             break;
         case error.POSITION_UNAVAILABLE:
-            message = 'GPS unavailable';
+            message = 'GPS Unavailable';
+            details = 'Location services not available. Try entering coordinates manually';
             updateGPSStatus('error', message);
             break;
         case error.TIMEOUT:
-            message = 'GPS timeout';
+            message = 'GPS Timeout';
+            details = 'Took too long to get location. Try again or enter coordinates';
             updateGPSStatus('error', message);
             break;
     }
     
-    console.warn('⚠️ ' + message);
+    console.warn('GPS Error: ' + message + ' - ' + details);
 }
 
 /**
@@ -148,7 +161,8 @@ function handleLocationError(error) {
  */
 function updateLocationDisplay(lat, lon, accuracy) {
     const locationElement = document.getElementById('current-location');
-    locationElement.textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)} (±${accuracy.toFixed(0)}m)`;
+    const accuracyLevel = accuracy < 10 ? 'Very Good' : accuracy < 50 ? 'Good' : 'Fair';
+    locationElement.textContent = `Latitude: ${lat.toFixed(6)}, Longitude: ${lon.toFixed(6)}\nAccuracy: ${accuracy.toFixed(0)} meters (${accuracyLevel})`;
 }
 
 /**
@@ -270,13 +284,14 @@ async function getAndDisplayRoute(lat1, lon1, lat2, lon2) {
             return;
         }
         
-        // Get traffic estimate
-        const trafficResponse = await fetch('/api/traffic-estimate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                duration: routeData.duration,
-                distance: routeData.distance
+// Get traffic estimate with current time for accurate arrival calculation
+    const trafficResponse = await fetch('/api/traffic-estimate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            duration: routeData.duration,
+            distance: routeData.distance,
+            departure_time: Math.floor(Date.now() / 1000)
             })
         });
         
@@ -327,16 +342,7 @@ function displayRoute(routeData, trafficData) {
             iconAnchor: [12, 41],
             popupAnchor: [1, -34]
         })
-    }).bindPopup('📍 Destination');
-    
-    routeLayer.addLayer(destMarker);
-    
-    // Add to map
-    routeLayer.addTo(map);
-    
-    // Fit map to route bounds
-    map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
-}
+        }).bindPopup('Destination Location');
 
 /**
  * Show route information in UI
@@ -348,14 +354,24 @@ function showRouteInfo(routeData, trafficData) {
     const duration = document.getElementById('duration');
     const speed = document.getElementById('speed');
     
+    // Calculate and format arrival time
+    const now = new Date();
+    const arrivalMs = now.getTime() + (trafficData.duration_seconds * 1000);
+    const arrivalTime = new Date(arrivalMs);
+    const arrivalFormatted = arrivalTime.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+    });
+    
     // Update traffic status color and text
     const trafficClass = trafficData.traffic_level.toLowerCase().replace(' ', '-');
     trafficStatus.className = trafficClass;
-    trafficStatus.innerHTML = `🚗 Traffic: <strong>${trafficData.traffic_level}</strong> (${trafficData.speed_kmh} km/h)`;
+    trafficStatus.innerHTML = `${trafficData.icon} Traffic: <strong>${trafficData.traffic_level}</strong><br>Speed: ${trafficData.speed_kmh} km/h<br>Arrive by: <strong>${arrivalFormatted}</strong>`;
     
-    // Update statistics
+    // Update statistics with better formatting
     distance.textContent = trafficData.distance_km + ' km';
-    duration.textContent = trafficData.duration_minutes + ' min';
+    duration.textContent = trafficData.duration_formatted;
     speed.textContent = trafficData.speed_kmh + ' km/h';
     
     // Show route info section
